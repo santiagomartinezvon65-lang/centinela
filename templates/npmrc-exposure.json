@@ -1,0 +1,22 @@
+{
+  "id": "npmrc-exposure",
+  "info": {
+    "name": ".npmrc expuesto (posible token de registry)",
+    "severity": "high",
+    "category": "secrets",
+    "remediation": "Quitá .npmrc del webroot y rotá cualquier _authToken."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/.npmrc",
+      "matchers_condition": "and",
+      "matchers": [
+        {"type": "status", "status": [200]},
+        {"type": "word", "part": "body", "words": ["_authToken", "registry=", "//"],
+         "condition": "or"},
+        {"type": "word", "part": "body", "words": ["<html"], "negative": true}
+      ]
+    }
+  ]
+}

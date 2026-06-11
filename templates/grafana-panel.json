@@ -1,0 +1,33 @@
+{
+  "id": "grafana-panel",
+  "info": {
+    "name": "Grafana detectado",
+    "severity": "low",
+    "category": "disclosure",
+    "remediation": "Restringí el acceso (auth/VPN/firewall); este recurso no debería ser público."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/login",
+      "matchers_condition": "and",
+      "matchers": [
+        {
+          "type": "status",
+          "status": [
+            200
+          ]
+        },
+        {
+          "type": "word",
+          "part": "body",
+          "words": [
+            "Grafana",
+            "grafana-app"
+          ],
+          "condition": "or"
+        }
+      ]
+    }
+  ]
+}

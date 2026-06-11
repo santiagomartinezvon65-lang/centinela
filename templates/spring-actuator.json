@@ -1,0 +1,33 @@
+{
+  "id": "spring-actuator",
+  "info": {
+    "name": "Spring Boot Actuator expuesto",
+    "severity": "medium",
+    "category": "disclosure",
+    "remediation": "Restringí el acceso (auth/VPN/firewall); este recurso no debería ser público."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/actuator",
+      "matchers_condition": "and",
+      "matchers": [
+        {
+          "type": "status",
+          "status": [
+            200
+          ]
+        },
+        {
+          "type": "word",
+          "part": "body",
+          "words": [
+            "_links",
+            "\"health\""
+          ],
+          "condition": "and"
+        }
+      ]
+    }
+  ]
+}

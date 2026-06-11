@@ -1,0 +1,22 @@
+{
+  "id": "docker-compose-exposure",
+  "info": {
+    "name": "docker-compose.yml expuesto",
+    "severity": "medium",
+    "category": "disclosure",
+    "remediation": "Quitá docker-compose.yml del webroot; puede revelar servicios y secretos."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/docker-compose.yml",
+      "matchers_condition": "and",
+      "matchers": [
+        {"type": "status", "status": [200]},
+        {"type": "word", "part": "body", "words": ["services:"]},
+        {"type": "word", "part": "body", "words": ["<html", "<!DOCTYPE"],
+         "condition": "or", "negative": true}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Centinela: el escáner determinístico (core/) es stdlib puro — sin dependencias.
+# Solo el modo pentest agéntico (core/agent.py, comando `pentest`) necesita:
+anthropic>=0.105

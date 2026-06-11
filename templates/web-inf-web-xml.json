@@ -1,0 +1,20 @@
+{
+  "id": "web-inf-web-xml",
+  "info": {
+    "name": "WEB-INF/web.xml expuesto (config de la app Java)",
+    "severity": "high",
+    "category": "disclosure",
+    "remediation": "Bloqueá el acceso público a /WEB-INF/ en el servidor."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/WEB-INF/web.xml",
+      "matchers_condition": "and",
+      "matchers": [
+        {"type": "status", "status": [200]},
+        {"type": "word", "part": "body", "words": ["<web-app", "</web-app>"], "condition": "or"}
+      ]
+    }
+  ]
+}

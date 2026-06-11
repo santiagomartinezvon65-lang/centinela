@@ -1,0 +1,33 @@
+{
+  "id": "adminer",
+  "info": {
+    "name": "Adminer expuesto (gestor de base de datos)",
+    "severity": "medium",
+    "category": "disclosure",
+    "remediation": "Restringí el acceso (auth/VPN/firewall); este recurso no debería ser público."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/adminer.php",
+      "matchers_condition": "and",
+      "matchers": [
+        {
+          "type": "status",
+          "status": [
+            200
+          ]
+        },
+        {
+          "type": "word",
+          "part": "body",
+          "words": [
+            "Login - Adminer",
+            "Adminer"
+          ],
+          "condition": "or"
+        }
+      ]
+    }
+  ]
+}

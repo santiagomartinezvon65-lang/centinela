@@ -1,0 +1,22 @@
+{
+  "id": "vscode-sftp-creds",
+  "info": {
+    "name": ".vscode/sftp.json expuesto (credenciales de deploy)",
+    "severity": "critical",
+    "category": "secrets",
+    "remediation": "Quitá .vscode/sftp.json del webroot y rotá las credenciales de inmediato."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/.vscode/sftp.json",
+      "matchers_condition": "and",
+      "matchers": [
+        {"type": "status", "status": [200]},
+        {"type": "word", "part": "body",
+         "words": ["host", "password", "privateKeyPath", "remotePath", "username"],
+         "condition": "or"}
+      ]
+    }
+  ]
+}

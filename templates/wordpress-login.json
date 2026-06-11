@@ -1,0 +1,33 @@
+{
+  "id": "wordpress-login",
+  "info": {
+    "name": "WordPress login detectado",
+    "severity": "info",
+    "category": "disclosure",
+    "remediation": "Restringí el acceso (auth/VPN/firewall); este recurso no debería ser público."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/wp-login.php",
+      "matchers_condition": "and",
+      "matchers": [
+        {
+          "type": "status",
+          "status": [
+            200
+          ]
+        },
+        {
+          "type": "word",
+          "part": "body",
+          "words": [
+            "user_login",
+            "loginform"
+          ],
+          "condition": "or"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "phpmyadmin",
+  "info": {
+    "name": "phpMyAdmin expuesto (gestor de base de datos)",
+    "severity": "medium",
+    "category": "disclosure",
+    "remediation": "Restringí el acceso (auth/VPN/firewall); este recurso no debería ser público."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/phpmyadmin/",
+      "matchers_condition": "and",
+      "matchers": [
+        {
+          "type": "status",
+          "status": [
+            200
+          ]
+        },
+        {
+          "type": "word",
+          "part": "body",
+          "words": [
+            "phpMyAdmin",
+            "pma_username"
+          ],
+          "condition": "or"
+        }
+      ]
+    }
+  ]
+}

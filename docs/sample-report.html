@@ -1,0 +1,194 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe de Seguridad — https://example.com</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1c2128;
+  max-width:900px;margin:0 auto;padding:40px 28px;line-height:1.5;background:#fff}
+h1{font-size:24px;margin:0 0 4px} h2{font-size:16px;margin:32px 0 12px;
+  border-bottom:2px solid #e1e4e8;padding-bottom:6px}
+.brand{color:#2da44e;font-weight:800;letter-spacing:.12em;font-size:13px}
+.sub{color:#57606a;font-size:13px}
+.hero{display:flex;gap:28px;align-items:center;margin:24px 0;padding:24px;
+  background:#f6f8fa;border:1px solid #e1e4e8;border-radius:12px}
+.grade{font-size:72px;font-weight:800;width:120px;height:120px;display:flex;
+  align-items:center;justify-content:center;border:3px solid #9a6700;color:#9a6700;
+  border-radius:16px;flex-shrink:0}
+.hero-meta{flex:1} .score{font-size:26px;font-weight:700}
+.cards{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.card{background:#fff;border:1px solid #e1e4e8;border-radius:10px;padding:12px 18px;text-align:center;min-width:80px}
+.num{font-size:28px;font-weight:800} .lbl{font-size:12px;color:#57606a}
+.risk{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;
+  background:#9a67001a;color:#9a6700;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td{padding:9px 10px;border-bottom:1px solid #eaecef}
+.pill{font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600}
+.pill.ok{background:#dafbe1;color:#1a7f37} .pill.bad{background:#ffebe9;color:#cf222e}
+.finding{border:1px solid #e1e4e8;border-left:4px solid;border-radius:8px;padding:14px 16px;margin:10px 0}
+.f-head{display:flex;align-items:center;gap:10px}
+.sev{color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px}
+.f-title{font-weight:600} .f-meta{font-size:12px;color:#57606a;margin:6px 0}
+.ev{font-size:13px;margin-top:6px} .ev code{background:#f6f8fa;padding:2px 6px;border-radius:4px;
+  word-break:break-all;font-size:12px}
+.fix{font-size:13px;margin-top:6px;color:#1a4f8a}
+.ok-msg{color:#1a7f37;font-weight:600}
+.fixcode{background:#0d1117;color:#c9d1d9;padding:16px;border-radius:8px;font-size:12px;
+  overflow-x:auto;white-space:pre;line-height:1.45;border:1px solid #30363d}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid #e1e4e8;color:#57606a;font-size:12px}
+@media print{body{padding:0}.finding,.hero{break-inside:avoid}}
+</style></head><body>
+<div class="brand">◣ CENTINELA</div>
+<h1>Informe de Seguridad</h1>
+<div class="sub">https://example.com · generado 2026-06-07 23:52 UTC · pentest · 1 página(s)</div>
+
+<div class="hero">
+  <div class="grade">C</div>
+  <div class="hero-meta">
+    <div class="score">75/100</div>
+    <div class="risk">Riesgo medium</div>
+    <div class="cards"><div class="card"><div class="num" style="color:#cf222e">0</div><div class="lbl">Críticas</div></div><div class="card"><div class="num" style="color:#bc4c00">0</div><div class="lbl">Altas</div></div><div class="card"><div class="num" style="color:#9a6700">1</div><div class="lbl">Medias</div></div><div class="card"><div class="num" style="color:#57606a">6</div><div class="lbl">Bajas</div></div></div>
+  </div>
+</div>
+
+<h2>Resumen ejecutivo</h2>
+<p>Pentest determinístico sobre 1 página(s): 9 hallazgo(s) — 0 críticas, 0 altas, 1 medias, 6 bajas. Lo más grave: «HTTP no redirige a HTTPS» (medium). Revisá cada hallazgo para la remediación concreta.</p>
+
+<h2>Cumplimiento — OWASP Top 10 (2021)</h2>
+<table><tr><td><b>A01:2021</b> Pérdida de control de acceso</td><td><span class="pill ok">sin hallazgos</span></td></tr><tr><td><b>A02:2021</b> Fallas criptográficas</td><td><span class="pill bad">1 hallazgo(s)</span></td></tr><tr><td><b>A03:2021</b> Inyección</td><td><span class="pill ok">sin hallazgos</span></td></tr><tr><td><b>A04:2021</b> Diseño inseguro</td><td><span class="pill ok">sin hallazgos</span></td></tr><tr><td><b>A05:2021</b> Configuración de seguridad incorrecta</td><td><span class="pill bad">8 hallazgo(s)</span></td></tr><tr><td><b>A06:2021</b> Componentes vulnerables y desactualizados</td><td><span class="pill ok">sin hallazgos</span></td></tr><tr><td><b>A07:2021</b> Fallas de identificación y autenticación</td><td><span class="pill ok">sin hallazgos</span></td></tr><tr><td><b>A08:2021</b> Fallas de integridad de software y datos</td><td><span class="pill ok">sin hallazgos</span></td></tr><tr><td><b>A09:2021</b> Fallas de registro y monitoreo</td><td><span class="pill ok">sin hallazgos</span></td></tr><tr><td><b>A10:2021</b> Server-Side Request Forgery (SSRF)</td><td><span class="pill ok">sin hallazgos</span></td></tr></table>
+
+<h2>Hallazgos detallados (9)</h2>
+
+        <div class="finding" style="border-left-color:#9a6700">
+          <div class="f-head">
+            <span class="sev" style="background:#9a6700">MEDIA</span>
+            <span class="f-title">HTTP no redirige a HTTPS</span>
+          </div>
+          <div class="f-meta">A02:2021 Fallas criptográficas · categoría: tls
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>http://example.com responde sin upgrade</code></div>
+          <div class="fix"><b>Remediación:</b> Forzá redirección 301 de http→https.</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">BAJA</span>
+            <span class="f-title">HSTS (Strict-Transport-Security)</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: headers
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>header ausente</code></div>
+          <div class="fix"><b>Remediación:</b> Fuerza HTTPS en el navegador. Agregá: Strict-Transport-Security: max-age=63072000; includeSubDomains</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">BAJA</span>
+            <span class="f-title">Content-Security-Policy</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: headers
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>header ausente</code></div>
+          <div class="fix"><b>Remediación:</b> Mitiga XSS/inyección. Definí una CSP restrictiva acorde a tu app.</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">BAJA</span>
+            <span class="f-title">X-Frame-Options / frame-ancestors</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: headers
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>header ausente</code></div>
+          <div class="fix"><b>Remediación:</b> Evita clickjacking. Usá X-Frame-Options: DENY o CSP frame-ancestors.</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">BAJA</span>
+            <span class="f-title">X-Content-Type-Options</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: headers
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>header ausente</code></div>
+          <div class="fix"><b>Remediación:</b> Evita MIME-sniffing. Agregá: X-Content-Type-Options: nosniff</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">BAJA</span>
+            <span class="f-title">Referrer-Policy</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: headers
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>header ausente</code></div>
+          <div class="fix"><b>Remediación:</b> Controla fuga de URLs por Referer. Ej: Referrer-Policy: no-referrer.</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">BAJA</span>
+            <span class="f-title">Permissions-Policy</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: headers
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>header ausente</code></div>
+          <div class="fix"><b>Remediación:</b> Restringe APIs del navegador (cámara, geo, etc.).</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">INFORMATIVA</span>
+            <span class="f-title">Sin security.txt</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: disclosure
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>no se encontró /.well-known/security.txt</code></div>
+          <div class="fix"><b>Remediación:</b> Publicá un security.txt con un contacto para reportes.</div>
+        </div>
+        <div class="finding" style="border-left-color:#57606a">
+          <div class="f-head">
+            <span class="sev" style="background:#57606a">INFORMATIVA</span>
+            <span class="f-title">Tecnología/versión expuesta</span>
+          </div>
+          <div class="f-meta">A05:2021 Configuración de seguridad incorrecta · categoría: disclosure
+            </div>
+          <div class="ev"><b>Evidencia:</b> <code>server: cloudflare</code></div>
+          <div class="fix"><b>Remediación:</b> Ocultá versiones en headers/HTML para dificultar el targeting de exploits.</div>
+        </div>
+
+<h2>Remediación rápida (headers de seguridad)</h2><p class="sub">Pegá esta config (formato Vercel) para corregir los headers faltantes:</p><pre class="fixcode"># Centinela — remediación para https://example.com (formato: vercel)
+{
+  &quot;headers&quot;: [
+    {
+      &quot;source&quot;: &quot;/(.*)&quot;,
+      &quot;headers&quot;: [
+        {
+          &quot;key&quot;: &quot;Strict-Transport-Security&quot;,
+          &quot;value&quot;: &quot;max-age=63072000; includeSubDomains; preload&quot;
+        },
+        {
+          &quot;key&quot;: &quot;Content-Security-Policy&quot;,
+          &quot;value&quot;: &quot;default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'&quot;
+        },
+        {
+          &quot;key&quot;: &quot;X-Frame-Options&quot;,
+          &quot;value&quot;: &quot;DENY&quot;
+        },
+        {
+          &quot;key&quot;: &quot;X-Content-Type-Options&quot;,
+          &quot;value&quot;: &quot;nosniff&quot;
+        },
+        {
+          &quot;key&quot;: &quot;Referrer-Policy&quot;,
+          &quot;value&quot;: &quot;strict-origin-when-cross-origin&quot;
+        },
+        {
+          &quot;key&quot;: &quot;Permissions-Policy&quot;,
+          &quot;value&quot;: &quot;geolocation=(), microphone=(), camera=()&quot;
+        }
+      ]
+    }
+  ]
+}
+
+# Además:
+#  - HTTPS: forzá la redirección 301 de http→https.
+
+# Nota: la CSP es un punto de partida; ajustala a los recursos reales de tu app.</pre>
+
+<footer>Generado por Centinela · herramienta de seguridad de uso ético — solo sitios
+propios o autorizados. Este informe refleja los controles ejecutados al momento del escaneo.</footer>
+</body></html>

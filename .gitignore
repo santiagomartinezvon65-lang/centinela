@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Datos de ejecución y SECRETOS (nunca commitear)
+data/*.json
+data/scans/
+data/*.key
+web/data.js
+
+# Informes generados
+/informe-*.html
+/centinela-*.csv
+/centinela-*.html
+
+# Editores / SO / tooling local
+.DS_Store
+.idea/
+.vscode/
+.claude/

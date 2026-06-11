@@ -1,0 +1,21 @@
+{
+  "id": "svn-wc-db",
+  "info": {
+    "name": "Repositorio SVN expuesto (.svn/wc.db)",
+    "severity": "high",
+    "category": "disclosure",
+    "remediation": "Bloqueá el acceso público a /.svn/ en el servidor.",
+    "reference": "https://owasp.org/www-community/attacks/Forced_browsing"
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/.svn/wc.db",
+      "matchers_condition": "and",
+      "matchers": [
+        {"type": "status", "status": [200]},
+        {"type": "word", "part": "body", "words": ["SQLite format"]}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "mercurial-exposure",
+  "info": {
+    "name": "Repositorio Mercurial expuesto (.hg)",
+    "severity": "high",
+    "category": "disclosure",
+    "remediation": "Bloqueá el acceso público a /.hg/ en el servidor."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/.hg/requires",
+      "matchers_condition": "and",
+      "matchers": [
+        {"type": "status", "status": [200]},
+        {"type": "word", "part": "body",
+         "words": ["revlogv1", "store", "dotencode", "fncache"], "condition": "or"},
+        {"type": "word", "part": "body", "words": ["<html", "<!DOCTYPE"],
+         "condition": "or", "negative": true}
+      ]
+    }
+  ]
+}

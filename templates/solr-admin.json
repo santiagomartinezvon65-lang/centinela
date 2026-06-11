@@ -1,0 +1,33 @@
+{
+  "id": "solr-admin",
+  "info": {
+    "name": "Apache Solr admin expuesto",
+    "severity": "high",
+    "category": "disclosure",
+    "remediation": "Restringí el acceso (auth/VPN/firewall); este recurso no debería ser público."
+  },
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/solr/",
+      "matchers_condition": "and",
+      "matchers": [
+        {
+          "type": "status",
+          "status": [
+            200
+          ]
+        },
+        {
+          "type": "word",
+          "part": "body",
+          "words": [
+            "Solr Admin",
+            "solr-admin"
+          ],
+          "condition": "or"
+        }
+      ]
+    }
+  ]
+}

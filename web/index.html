@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centinela — escáner de seguridad web</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header>
+    <div class="brand">
+      <span class="logo">◣</span>
+      <span>CENTINELA</span>
+      <span class="tag">web security platform</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-view="scan">Escanear</button>
+      <button class="tab" data-view="protect">Protección</button>
+    </nav>
+  </header>
+
+  <div class="app" id="view-scan">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <h2>Historial</h2>
+        <span id="histcount" class="dim mono"></span>
+      </div>
+      <div id="history" class="history"></div>
+    </aside>
+
+    <main>
+      <form id="scanform" class="scanbar" autocomplete="off">
+        <input id="url" type="text" placeholder="https://tusitio.com" spellcheck="false"
+               class="mono" required />
+        <button id="go" type="submit">Escanear</button>
+        <div class="scanopts">
+          <label class="auth">
+            <input id="authorized" type="checkbox" />
+            <span>Es mío o tengo permiso</span>
+          </label>
+          <label class="auth">
+            <input id="crawl" type="checkbox" />
+            <span>Escanear todo el sitio (crawl)</span>
+          </label>
+          <label class="auth">
+            <input id="pentest" type="checkbox" />
+            <span>Pentest completo (SQLi/XSS/CVEs/backups…)</span>
+          </label>
+          <label class="auth">
+            <input id="lab" type="checkbox" />
+            <span>Lab vulnerable</span>
+          </label>
+          <label class="auth selectwrap">
+            <span>Cookie:</span>
+            <input id="cookie" type="text" class="mono cookie-in"
+                   placeholder="session=… (autenticado, opcional)" spellcheck="false" />
+          </label>
+          <label class="auth selectwrap">
+            <span>Perfil:</span>
+            <select id="profile" class="mono">
+              <option value="auto">Auto-detectar</option>
+              <option value="0">Vitrina estática</option>
+              <option value="1">Con formularios</option>
+              <option value="2">Login / cuentas</option>
+              <option value="3">Transaccional / pagos</option>
+            </select>
+          </label>
+        </div>
+      </form>
+
+      <div id="msg" class="msg" hidden></div>
+
+      <section id="loading" class="loading" hidden>
+        <div class="radar"></div>
+        <div id="loadtxt" class="mono dim">escaneando…</div>
+      </section>
+
+      <section id="empty" class="empty">
+        <div class="empty-icon">◣</div>
+        <p>Pegá una URL <b>tuya</b> y dale a Escanear.</p>
+        <p class="dim">Headers, TLS, cookies, CORS, fugas de info, reflejo de params y más — sin payloads destructivos.</p>
+      </section>
+
+      <div id="result" hidden>
+        <div class="result-bar">
+          <div class="result-target mono" id="target"></div>
+          <div class="exports">
+            <button id="exp-html" class="ghost" type="button">↓ HTML</button>
+            <button id="exp-pdf" class="ghost" type="button">⎙ PDF</button>
+          </div>
+        </div>
+
+        <div id="notice" class="notice-banner" hidden></div>
+        <div id="agent-banner" class="agent-banner" hidden></div>
+        <div id="delta" class="delta" hidden></div>
+        <div id="profile-banner" class="profile-banner" hidden></div>
+
+        <section class="hero">
+          <div id="grade" class="grade">—</div>
+          <div class="hero-meta">
+            <div class="score"><span id="score">0</span><span class="of">/100</span></div>
+            <div id="scanned" class="mono dim"></div>
+            <div id="pages" class="mono dim"></div>
+            <div id="counts" class="counts"></div>
+          </div>
+        </section>
+
+        <section class="findings">
+          <h2>Hallazgos</h2>
+          <div id="list"></div>
+        </section>
+
+        <section class="passed-wrap">
+          <h2>Chequeos superados <span id="passcount" class="dim"></span></h2>
+          <div id="passed" class="passed"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <main id="view-protect" class="protect" hidden>
+    <section id="prot-stats" class="prot-stats"></section>
+    <div class="prot-grid">
+      <section class="prot-col">
+        <div class="prot-head">
+          <h2>Backlog de vulnerabilidades</h2>
+          <button id="vulns-refresh" class="ghost" type="button">↻ actualizar</button>
+        </div>
+        <div class="prot-filters">
+          <select id="vf-status" class="mono">
+            <option value="">todos los estados</option>
+            <option value="open">🔴 abiertas</option>
+            <option value="acknowledged">👀 reconocidas</option>
+            <option value="false_positive">🚫 falso-positivo</option>
+            <option value="accepted_risk">🟡 riesgo aceptado</option>
+            <option value="fixed">✅ arregladas</option>
+          </select>
+          <select id="vf-sev" class="mono">
+            <option value="">toda severidad</option>
+            <option value="critical">críticas</option>
+            <option value="high">altas</option>
+            <option value="medium">medias</option>
+            <option value="low">bajas</option>
+          </select>
+        </div>
+        <div id="vulns-list" class="vulns-list"></div>
+      </section>
+
+      <section class="prot-col">
+        <div class="prot-head"><h2>Activos vigilados</h2></div>
+        <form id="asset-form" class="asset-form" autocomplete="off">
+          <input id="asset-url" class="mono" placeholder="https://tusitio.com" />
+          <input id="asset-int" type="number" value="60" min="1" title="intervalo (min)" />
+          <label class="auth"><input id="asset-pentest" type="checkbox" /><span>pentest</span></label>
+          <button type="submit">+ Vigilar</button>
+        </form>
+        <div id="assets-list" class="assets-list"></div>
+        <button id="guard-run" class="ghost" type="button">▶ Correr guardián ahora</button>
+
+        <div class="prot-head" style="margin-top:24px"><h2>Alertas recientes</h2></div>
+        <div id="alerts-list" class="alerts-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="mono dim">
+    Centinela · plataforma de seguridad · uso ético — solo sitios propios o autorizados
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
