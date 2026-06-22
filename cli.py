@@ -261,6 +261,11 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         qs = parse_qs(urlparse(self.path).query)
+        # ── sello público: siempre accesible, incluso con --auth ──
+        if path.startswith("/badge/"):
+            return self._serve_badge(path)
+        if path.startswith("/verify/"):
+            return self._serve_verify(path)
         if self.auth:
             if path.startswith("/login"):
                 return self._serve_login()
@@ -296,6 +301,26 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/api/report/"):
             return self._serve_report(path.rsplit("/", 1)[-1], qs.get("format", ["html"])[0])
         return super().do_GET()
+
+    def _serve_badge(self, path: str):
+        from core import seal
+        sid = path[len("/badge/"):].split(".")[0]
+        st = seal.status(sid)
+        svg = seal.badge_svg(st["state"] if st else "pending")
+        body = svg.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _serve_verify(self, path: str):
+        from core import seal
+        sid = path[len("/verify/"):].strip("/")
+        st = seal.status(sid)
+        if not st:
+            return self._send(b"<h1>Unknown seal</h1>", "text/html; charset=utf-8", 404)
+        self._send(seal.verify_page(st).encode("utf-8"), "text/html; charset=utf-8")
 
     def _serve_report(self, sid: str, fmt: str):
         rep = store.get_scan(sid)
@@ -421,6 +446,9 @@ def cmd_pentest(args: argparse.Namespace) -> int:
         if args.provider == "engine":
             from core.engine import LocalPentester
             report = LocalPentester(args.url, lab=args.lab).run()
+        elif args.provider == "brain":
+            from core.brain import BrainPentester
+            report = BrainPentester(args.url, lab=args.lab).run()
         else:
             from core.agent import CentinelaAgent
             try:
@@ -446,8 +474,11 @@ def cmd_pentest(args: argparse.Namespace) -> int:
     if report.get("owasp"):
         for cat, n in sorted(report["owasp"].items()):
             print(f"  {C['dim']}· {cat}: {n}{C['x']}")
-    if report.get("provider") in ("engine", "ollama"):
+    if report.get("provider") in ("engine", "brain", "ollama"):
         print(f"  {C['dim']}local · gratis · sin dependencias{C['x']}")
+    elif report.get("provider") == "groq":
+        print(f"  {C['dim']}nube · Groq (tier gratis) · tokens: "
+              f"{u['input_tokens']}↓ {u['output_tokens']}↑{C['x']}")
     else:
         print(f"  {C['dim']}tokens: {u['input_tokens']}↓ {u['output_tokens']}↑ · "
               f"~USD {u['est_cost_usd']}{C['x']}")
@@ -458,6 +489,108 @@ def cmd_pentest(args: argparse.Namespace) -> int:
     if rc:
         print(f"{C['crit']}✗ fail-on {args.fail_on}: hay hallazgos de esa severidad o peor.{C['x']}")
     return rc
+
+
+def cmd_bench(args: argparse.Namespace) -> int:
+    from core import benchmark as bench
+    brains = [b for b in args.brains.split(",") if b.strip()]
+    bad = [b for b in brains if b not in bench.BRAINS]
+    if bad:
+        print(f"{C['crit']}Cerebro(s) inválido(s): {bad}. Opciones: {bench.BRAINS}{C['x']}")
+        return 1
+
+    def _go(targets):
+        print(f"{C['b']}🏁 Centinela Benchmark{C['x']}  "
+              f"{C['dim']}{len(targets)} target(s) × {len(brains)} cerebro(s): "
+              f"{', '.join(brains)}{C['x']}\n")
+        results = bench.run_benchmark(targets, brains, model=args.model,
+                                      max_steps=args.max_steps, verbose=args.verbose)
+        bench.print_leaderboard(results)
+        if args.json:
+            bench.to_json(results, args.json)
+            print(f"\n{C['dim']}JSON → {args.json}{C['x']}")
+        if args.html:
+            bench.to_html(results, args.html)
+            print(f"{C['dim']}HTML → {args.html}{C['x']}")
+
+    if args.local:  # lab local offline (SQLi ciego, XSS, .env) — sin internet
+        from core import locallab
+        with locallab.running() as url:
+            _go([locallab.target(url)])
+        return 0
+
+    only = [n for n in args.targets.split(",") if n.strip()] if args.targets else None
+    try:
+        targets = bench.load_targets(only=only)
+    except FileNotFoundError:
+        print(f"{C['crit']}No encontré bench/targets.json{C['x']}")
+        return 1
+    if not targets:
+        print(f"{C['crit']}Ningún target coincide con: {args.targets}{C['x']}")
+        return 1
+    _go(targets)
+    return 0
+
+
+def cmd_train(args: argparse.Namespace) -> int:
+    from core import brain
+    try:
+        out = brain.train_from_samples(epochs=args.epochs, lr=args.lr)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"{C['crit']}{e}{C['x']}")
+        return 1
+    m = out["metrics"]
+    print(f"{C['b']}🧠 Modelo entrenado{C['x']}  {C['dim']}{out['n_samples']} muestras "
+          f"({out['positives']} positivas){C['x']}")
+    print(f"  accuracy {C['ok']}{m['accuracy']*100:.0f}%{C['x']} · "
+          f"precision {m['precision']*100:.0f}% · recall {m['recall']*100:.0f}% · "
+          f"F1 {m['f1']:.2f} · loss {m['loss']}")
+    print(f"\n{C['b']}Pesos aprendidos (qué señales importan):{C['x']}")
+    for name, w in out["weights"]:
+        bar = ("+" if w >= 0 else "-") * min(int(abs(w) * 2) + 1, 20)
+        col = C["ok"] if w >= 0 else C["crit"]
+        print(f"  {name:18s} {col}{w:+.2f}{C['x']} {C['dim']}{bar}{C['x']}")
+    print(f"\n{C['dim']}Modelo → {out['model_path']}  ·  usalo con --provider brain{C['x']}")
+    return 0
+
+
+def cmd_seal(args: argparse.Namespace) -> int:
+    from core import seal
+    op = args.op
+    if op == "issue":
+        out = seal.issue(args.url, base_url=args.base_url)
+        st = seal.status(out["seal_id"])
+        print(f"{C['b']}🛡  Trust Seal emitido para {out['host']}{C['x']}")
+        print(f"  {C['dim']}estado actual: {st['state']}{C['x']}")
+        print(f"  verificación: {C['ok']}{out['verify_url']}{C['x']}")
+        print(f"  badge:        {C['dim']}{out['badge_url']}{C['x']}\n")
+        print(f"{C['b']}Pegá esto en la web del cliente (HTML):{C['x']}\n")
+        print(out["snippet"] + "\n")
+        if st["state"] != "verified":
+            print(f"{C['high']}⚠ El sello no está 'verified' todavía. "
+                  f"Corré un scan/pentest del sitio para activarlo.{C['x']}")
+        return 0
+    if op == "status":
+        st = seal.status_for_url(args.url) if args.url else None
+        if not st:
+            print(f"{C['crit']}No hay sello para ese sitio. Emitilo: seal issue <url>{C['x']}")
+            return 1
+        print(f"{C['b']}{st['host']}{C['x']} → {st['state']}  "
+              f"{C['dim']}(grade {st.get('grade') or '—'}, "
+              f"último audit {st.get('last_audit') or 'nunca'}){C['x']}")
+        return 0
+    if op == "list":
+        seals = seal.list_seals()
+        if not seals:
+            print(f"{C['dim']}Sin sellos emitidos. Emití uno: seal issue <url>{C['x']}")
+            return 0
+        print(f"{C['b']}Sellos emitidos:{C['x']}")
+        for s in seals:
+            st = seal.status(s["seal_id"])
+            print(f"  {C['ok']}●{C['x']} {s['host']:<28} {C['dim']}[{st['state']}] "
+                  f"{s['seal_id']}{C['x']}")
+        return 0
+    return 1
 
 
 def cmd_recon(args: argparse.Namespace) -> int:
@@ -544,6 +677,43 @@ def cmd_report(args: argparse.Namespace) -> int:
     if args.open:
         webbrowser.open("file://" + os.path.abspath(out))
     print(f"{C['dim']}Abrilo y usá Imprimir → Guardar como PDF para el deliverable.{C['x']}")
+    return 0
+
+
+def cmd_compliance(args: argparse.Namespace) -> int:
+    from core import compliance
+    sid = args.id
+    if sid in (None, "last"):
+        hist = store.list_history()
+        if not hist:
+            print(f"{C['crit']}No hay escaneos. Corré un scan/pentest del sitio primero.{C['x']}")
+            return 1
+        sid = hist[0]["id"]
+    rep = store.get_scan(sid)
+    if not rep:
+        print(f"{C['crit']}No existe ese id.{C['x']}")
+        return 1
+
+    a = compliance.assess(rep, args.standard)
+    vcol = C["ok"] if a["verdict"] == "Compliant" else C["crit"]
+    print(f"\n{C['b']}{a['std_name']} — {a['host']}{C['x']}")
+    print(f"  {vcol}{a['verdict']}{C['x']}  {C['dim']}({a['passing']}/{a['total']} "
+          f"requisitos OK){C['x']}\n")
+    for r in a["results"]:
+        ok = r["status"] == "pass"
+        mark = f"{C['ok']}✓ PASS{C['x']}" if ok else f"{C['crit']}✗ ACTION{C['x']}"
+        print(f"  {mark}  {C['dim']}{r['code']:<10}{C['x']} {r['title']}")
+        for f in r["findings"][:4]:
+            print(f"      {C['dim']}· [{f['severity']}] {f['label']}{C['x']}")
+
+    host = urlparse(rep["target"]).hostname or "site"
+    out = args.output or f"compliance-{args.standard}-{host}-{sid}.html"
+    with open(out, "w", encoding="utf-8") as fh:
+        fh.write(compliance.build_html(rep, args.standard))
+    print(f"\n{C['ok']}Compliance report → {out}{C['x']}")
+    print(f"{C['dim']}Abrilo y usá Imprimir → Guardar como PDF para mandárselo al cliente.{C['x']}")
+    if args.open:
+        webbrowser.open("file://" + os.path.abspath(out))
     return 0
 
 
@@ -915,10 +1085,12 @@ def main() -> int:
     pt.add_argument("url")
     pt.add_argument("--lab", action="store_true",
                     help="target intencionalmente vulnerable (permite payloads de detección)")
-    pt.add_argument("--provider", choices=["engine", "auto", "anthropic", "ollama"],
+    pt.add_argument("--provider",
+                    choices=["engine", "brain", "auto", "anthropic", "groq", "ollama"],
                     default="engine",
-                    help="engine (default): motor de reglas sin IA, sin deps. "
-                    "auto/anthropic/ollama: cerebro LLM (Claude o local).")
+                    help="engine: motor de reglas. brain: cerebro propio entrenable "
+                    "(sin deps, aprende). groq: Llama 70B nube (gratis). "
+                    "anthropic: Claude (pago). ollama: modelo local.")
     pt.add_argument("--model", default=None,
                     help="modelo LLM si usás un provider de IA (no aplica a engine)")
     pt.add_argument("--json", default=None, help="guardar el informe en un archivo .json")
@@ -931,10 +1103,36 @@ def main() -> int:
     pt.add_argument("--authorized", action="store_true")
     pt.set_defaults(func=cmd_pentest)
 
+    bm = sub.add_parser("bench", help="benchmark: cuánto resuelve el agente sobre labs conocidos")
+    bm.add_argument("--targets", default=None,
+                    help="filtrar por nombre (coma-separado), ej. ginandjuice,testfire. Default: todos.")
+    bm.add_argument("--brains", default="engine",
+                    help="cerebros a comparar (coma-separado): engine,ollama,anthropic. Default: engine.")
+    bm.add_argument("--model", default=None, help="modelo LLM para cerebros de IA")
+    bm.add_argument("--max-steps", type=int, default=14)
+    bm.add_argument("--json", default=None, help="guardar resultados en .json")
+    bm.add_argument("--html", default=None, help="guardar leaderboard en .html")
+    bm.add_argument("--verbose", action="store_true", help="mostrar la traza de cada corrida")
+    bm.add_argument("--local", action="store_true",
+                    help="benchmarkea contra un lab local offline (SQLi ciego + XSS + .env), sin internet")
+    bm.set_defaults(func=cmd_bench)
+
+    tr = sub.add_parser("train", help="entrena el cerebro propio con las muestras juntadas (--provider brain)")
+    tr.add_argument("--epochs", type=int, default=400)
+    tr.add_argument("--lr", type=float, default=0.3)
+    tr.set_defaults(func=cmd_train)
+
     dn = sub.add_parser("dns", help="auditoría de DNS/email (SPF/DMARC: ¿se puede falsificar tu email?)")
     dn.add_argument("domain")
     dn.add_argument("--fail-on", choices=["critical", "high", "medium", "low"])
     dn.set_defaults(func=cmd_dns)
+
+    sl = sub.add_parser("seal", help="sello de confianza verificable (badge para la web del cliente)")
+    sl.add_argument("op", choices=["issue", "status", "list"])
+    sl.add_argument("url", nargs="?", help="URL del sitio (issue/status)")
+    sl.add_argument("--base-url", default="http://localhost:8077",
+                    help="dominio público donde corre Centinela (va en el snippet del badge)")
+    sl.set_defaults(func=cmd_seal)
 
     rc = sub.add_parser("recon", help="recon de red: subdominios (DNS) + puertos abiertos")
     rc.add_argument("url")
@@ -974,6 +1172,15 @@ def main() -> int:
     rp.add_argument("--csv", help="además, exportar los hallazgos a este CSV")
     rp.add_argument("--open", action="store_true", help="abrir el informe en el navegador")
     rp.set_defaults(func=cmd_report)
+
+    cp = sub.add_parser("compliance",
+                        help="informe de cumplimiento (PCI) — deliverable de venta para USA")
+    cp.add_argument("id", nargs="?", help="id del escaneo (o 'last'); vacío = último")
+    cp.add_argument("--standard", choices=["pci"], default="pci",
+                    help="estándar a evaluar (por ahora pci)")
+    cp.add_argument("-o", "--output", help="archivo HTML de salida")
+    cp.add_argument("--open", action="store_true", help="abrir el informe en el navegador")
+    cp.set_defaults(func=cmd_compliance)
 
     w = sub.add_parser("watch", help="gestionar los sitios que vigila el guardián")
     w.add_argument("op", choices=["add", "list", "remove"])

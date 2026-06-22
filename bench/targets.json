@@ -1,0 +1,52 @@
+{
+  "_comment": "Ground-truth de labs PÚBLICOS y autorizados para testing. Cada vuln tiene 'match': palabras clave (es/en) que, si aparecen en title/category/evidence de un hallazgo, cuentan como detectada. Conservador: solo vulns razonablemente presentes en cada lab.",
+  "targets": [
+    {
+      "name": "ginandjuice",
+      "url": "https://ginandjuice.shop",
+      "lab": true,
+      "vendor": "PortSwigger (Burp) demo shop",
+      "vulns": [
+        {"id": "sqli", "label": "SQL Injection", "severity": "high", "match": ["sql"]},
+        {"id": "xss", "label": "Cross-Site Scripting", "severity": "high", "match": ["xss", "cross-site script", "scripting reflej"]},
+        {"id": "hsts", "label": "Falta HSTS", "severity": "high", "match": ["hsts", "strict-transport"]},
+        {"id": "csp", "label": "Falta Content-Security-Policy", "severity": "medium", "match": ["content-security-policy", "csp"]},
+        {"id": "csrf", "label": "Formulario sin token CSRF", "severity": "medium", "match": ["csrf"]},
+        {"id": "cookie", "label": "Cookies sin flags de seguridad", "severity": "medium", "match": ["cookie"]}
+      ]
+    },
+    {
+      "name": "testfire",
+      "url": "https://demo.testfire.net",
+      "lab": true,
+      "vendor": "Altoro Mutual (IBM AppScan demo)",
+      "vulns": [
+        {"id": "sqli", "label": "SQL Injection (login)", "severity": "high", "match": ["sql"]},
+        {"id": "xss", "label": "Cross-Site Scripting", "severity": "high", "match": ["xss", "cross-site script", "scripting reflej"]},
+        {"id": "hsts", "label": "Falta HSTS", "severity": "high", "match": ["hsts", "strict-transport"]}
+      ]
+    },
+    {
+      "name": "testphp",
+      "url": "http://testphp.vulnweb.com",
+      "lab": true,
+      "vendor": "Acunetix PHP test site",
+      "vulns": [
+        {"id": "sqli", "label": "SQL Injection", "severity": "high", "match": ["sql"]},
+        {"id": "xss", "label": "Cross-Site Scripting", "severity": "high", "match": ["xss", "cross-site script", "scripting reflej"]},
+        {"id": "headers", "label": "Faltan headers de seguridad", "severity": "medium", "match": ["x-content-type", "x-frame", "content-security-policy", "hsts", "strict-transport"]}
+      ]
+    },
+    {
+      "name": "zero",
+      "url": "http://zero.webappsecurity.com",
+      "lab": true,
+      "vendor": "Micro Focus banking test app",
+      "vulns": [
+        {"id": "sqli", "label": "SQL Injection", "severity": "high", "match": ["sql"]},
+        {"id": "xss", "label": "Cross-Site Scripting", "severity": "high", "match": ["xss", "cross-site script", "scripting reflej"]},
+        {"id": "headers", "label": "Faltan headers de seguridad", "severity": "medium", "match": ["x-content-type", "x-frame", "content-security-policy", "hsts", "strict-transport"]}
+      ]
+    }
+  ]
+}

@@ -135,6 +135,9 @@ class CentinelaAgent:
         self.findings: list[dict] = []
         self.summary = ""
         self.overall_risk = ""
+        self.reachable = True
+        self.notice: str | None = None
+        self.http_status = 200
         self.backend = make_backend(provider, model, SYSTEM, TOOLS)
         self.provider = self.backend.name
         self.model = self.backend.model
@@ -205,6 +208,17 @@ class CentinelaAgent:
     # ── loop principal (provider-agnóstico) ─────────────────────────
     def run(self) -> dict:
         mode = "LAB (vulnerable a propósito)" if self.lab else "normal (no destructivo)"
+        # Chequeo de conectividad: si el objetivo no responde, no gastamos pasos
+        # del LLM — lo marcamos inalcanzable (igual que el motor de reglas).
+        probe = fetch(self.target)
+        if probe.error:
+            self.reachable = False
+            self.notice = f"No se pudo conectar: {probe.error}"
+            print(f"{C['b']}🛡  Centinela Agent → {self.target}{C['x']}  "
+                  f"{C['dim']}[{self.provider}:{self.model}]{C['x']}")
+            print(f"{C['crit']}▸ {self.notice}{C['x']}")
+            return self._build_report(0)
+        self.http_status = probe.status
         task = (f"Objetivo autorizado: {self.target}\nModo: {mode}\n\n"
                 "Hacé un pentest completo: reconocé, formá hipótesis, validá con "
                 "requests reales y documentá las vulns confirmadas. Empezá por "
@@ -214,6 +228,7 @@ class CentinelaAgent:
               f"{C['dim']}[{self.provider}:{self.model}, modo {mode}]{C['x']}\n")
 
         step = 0
+        nudges = 2  # tolerancia a turnos sin tool-call (modelos chicos "piensan en voz alta")
         for step in range(1, self.max_steps + 1):
             turn = self.backend.step()
             if turn.text:
@@ -230,11 +245,30 @@ class CentinelaAgent:
                 if tc["name"] == "finish":
                     done = True
 
-            if not turn.tool_calls or done:
+            if done:
                 if not self.summary:
                     self.summary = turn.text
                 break
+
+            if not turn.tool_calls:
+                # El modelo no usó herramientas. En vez de matar el loop (un modelo
+                # chico puede narrar sin emitir tool-call), lo empujamos a seguir o
+                # cerrar con finish. Sólo cerramos si se agotan los nudges.
+                if nudges > 0:
+                    nudges -= 1
+                    print(f"{C['dim']}  ↳ (nudge: pedí que continúe o cierre){C['x']}")
+                    self.backend.add_user(
+                        "No llamaste ninguna herramienta. Si ya terminaste, llamá "
+                        "`finish` con tu resumen ejecutivo. Si no, seguí: usá "
+                        "run_checks / http_request para validar hipótesis y "
+                        "record_finding para documentar cada vuln confirmada.")
+                    continue
+                if not self.summary:
+                    self.summary = turn.text
+                break
+
             self.backend.add_tool_results(tool_results)
+            nudges = 2  # hubo progreso: recargamos la tolerancia
         else:
             print(f"{C['high']}⚠ alcancé el máximo de pasos ({self.max_steps}){C['x']}")
 
@@ -260,7 +294,8 @@ class CentinelaAgent:
             "score": score, "grade": _grade(score), "counts": counts,
             "total_checks": len(self.findings),
             "passed": 0, "pages": [self.target], "profile": {},
-            "http_status": 200, "reachable": True, "notice": None,
+            "http_status": self.http_status, "reachable": self.reachable,
+            "notice": self.notice,
             "summary": self.summary, "overall_risk": self.overall_risk,
             "model": self.model, "provider": self.provider,
             "steps": steps, "lab": self.lab,

@@ -93,7 +93,11 @@ def fetch(url: str, method: str = "GET", headers: dict | None = None,
     except urllib.error.HTTPError as e:
         headers = {k.lower(): v for k, v in e.headers.items()} if e.headers else {}
         cookies = e.headers.get_all("Set-Cookie") if e.headers else []
-        return Response(url, e.url or url, e.code, headers, cookies or [], "",
+        try:  # el body de un 4xx/5xx suele traer la traza (clave para SQLi error-based)
+            ebody = e.read(600_000).decode("utf-8", "replace") if method == "GET" else ""
+        except Exception:  # noqa: BLE001
+            ebody = ""
+        return Response(url, e.url or url, e.code, headers, cookies or [], ebody,
                         redirects=tracker.chain)
     except Exception as e:  # noqa: BLE001 — network errors are expected
         return Response(url, url, 0, {}, [], "", error=str(e),

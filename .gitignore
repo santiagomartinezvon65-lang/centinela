@@ -8,6 +8,7 @@ dist/
 
 # Datos de ejecución y SECRETOS (nunca commitear)
 data/*.json
+data/*.jsonl
 data/scans/
 data/*.key
 web/data.js
@@ -16,6 +17,7 @@ web/data.js
 /informe-*.html
 /centinela-*.csv
 /centinela-*.html
+/compliance-*.html
 
 # Editores / SO / tooling local
 .DS_Store

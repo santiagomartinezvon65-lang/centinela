@@ -313,5 +313,33 @@ class TestRecon(unittest.TestCase):
                          "Server: nginx")
 
 
+class TestAgentReachability(unittest.TestCase):
+    """El agente debe marcar reachable=False y NO gastar pasos del LLM si el
+    objetivo está caído (igual que el motor de reglas)."""
+
+    def test_unreachable_target_short_circuits(self):
+        from unittest import mock
+        import core.agent as agent_mod
+
+        class _DummyBackend:
+            name = "dummy"
+            model = "dummy"
+            def usage(self):
+                return (0, 0)
+            def step(self):  # no debería llamarse nunca
+                raise AssertionError("no debería razonar sobre un host caído")
+
+        dead = _resp(status=0, error="conn refused")
+        with mock.patch.object(agent_mod, "fetch", return_value=dead), \
+             mock.patch("core.llm.make_backend", return_value=_DummyBackend()):
+            ag = agent_mod.CentinelaAgent("http://127.0.0.1:9", lab=True, provider="ollama")
+            rep = ag.run()
+
+        self.assertFalse(rep["reachable"])
+        self.assertEqual(rep["steps"], 0)
+        self.assertEqual(rep["findings"], [])
+        self.assertIn("conn refused", rep["notice"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

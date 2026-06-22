@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Centinela — Continuous security monitoring & PCI trust seal for online stores</title>
+<meta name="description" content="Centinela continuously scans your online store, keeps you PCI-ready, and gives your customers a trust seal they can verify. Get a free security report.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="Centinela home">
+    <span class="brand-mark" aria-hidden="true">◣</span> CENTINELA
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="#how">How it works</a>
+    <a href="#seal">Trust seal</a>
+    <a href="#compliance">PCI</a>
+    <a href="#pricing">Pricing</a>
+  </nav>
+  <a href="#report" class="btn btn-sm">Get free report</a>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="reveal">
+      <span class="eyebrow">Continuous security for online stores</span>
+      <h1>Is your store quietly<br><span class="accent">leaking customer data?</span></h1>
+      <p class="lead">Centinela scans your store around the clock, keeps you PCI-ready,
+        and gives your customers a security seal they can actually verify.
+        Most owners don't find the hole until it costs them.</p>
+      <form class="report-form" id="report" onsubmit="return requestReport(event)">
+        <input type="text" id="site" inputmode="url" autocomplete="off"
+               placeholder="yourstore.com" aria-label="Your store URL" required>
+        <button type="submit" class="btn">Get your free security report</button>
+      </form>
+      <p class="microcopy">Free, no obligation. We show you exactly what's exposed.</p>
+    </div>
+    <div class="hero-badge reveal">
+      <svg width="260" height="42" role="img" aria-label="Secured and monitored: verified" xmlns="http://www.w3.org/2000/svg">
+        <rect rx="7" width="260" height="42" fill="#1b2330"/>
+        <rect rx="7" x="166" width="94" height="42" fill="#3fb950"/><rect x="166" width="11" height="42" fill="#3fb950"/>
+        <g transform="translate(15,12)"><path d="M9 0L1 3.4v5.6c0 4.4 3.4 7.8 8 8.9 4.6-1.1 8-4.5 8-8.9V3.4z" fill="#3fb950"/><path d="M5.5 9l2.2 2.2 4.6-4.6" stroke="#0b0f16" stroke-width="1.8" fill="none"/></g>
+        <g font-family="Inter,sans-serif" font-weight="700"><text x="42" y="19" fill="#aeb9c7" font-size="12">CENTINELA</text><text x="42" y="32" fill="#e6edf3" font-size="9.5" font-weight="400">SECURED &amp; MONITORED</text><text x="213" y="26" fill="#06140b" font-size="12" text-anchor="middle">VERIFIED</text></g>
+      </svg>
+      <span class="hero-badge-note">Live on your checkout · verifiable by anyone</span>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="band">
+    <div class="section-head reveal">
+      <span class="eyebrow">Why it matters</span>
+      <h2>Three ways an unmonitored store costs you money</h2>
+    </div>
+    <div class="grid-3">
+      <article class="card reveal">
+        <div class="ico" aria-hidden="true">$</div>
+        <h3>Lost sales at checkout</h3>
+        <p>Shoppers abandon carts on stores that don't feel safe. A visible, verified
+          security seal lifts trust right where the money changes hands.</p>
+      </article>
+      <article class="card reveal">
+        <div class="ico" aria-hidden="true">!</div>
+        <h3>PCI fines &amp; liability</h3>
+        <p>If you take card payments, PCI DSS isn't optional. A single breach can mean
+          fines, forensic costs, and losing the right to process cards.</p>
+      </article>
+      <article class="card reveal">
+        <div class="ico" aria-hidden="true">◐</div>
+        <h3>Silent exposure</h3>
+        <p>Misconfigured headers, weak TLS, injection flaws — most go unnoticed for
+          months. You can't fix what nobody is watching for.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="band alt" id="how">
+    <div class="section-head reveal">
+      <span class="eyebrow">How it works</span>
+      <h2>Set up once. Protected continuously.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <span class="step-n">01</span>
+        <h3>We scan your store</h3>
+        <p>Centinela runs a full security audit of your storefront and finds what's
+          exposed — headers, TLS, cookies, injection points and more.</p>
+      </div>
+      <div class="step reveal">
+        <span class="step-n">02</span>
+        <h3>We monitor 24/7</h3>
+        <p>It re-checks your site automatically and alerts you the moment something
+          breaks or a new risk appears. This covers your quarterly PCI scan.</p>
+      </div>
+      <div class="step reveal">
+        <span class="step-n">03</span>
+        <h3>You show the seal</h3>
+        <p>Once your store is clean, you get a verified trust seal for your checkout
+          and a PCI compliance report you can hand to anyone who asks.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST SEAL -->
+  <section class="band split" id="seal">
+    <div class="split-text reveal">
+      <span class="eyebrow">The trust seal</span>
+      <h2>A seal your customers can <span class="accent">verify themselves</span></h2>
+      <p>Paste one line of HTML and the seal appears on your checkout. It stays green
+        only while Centinela is actively monitoring and your store is clean. Click it,
+        and anyone lands on a public verification page — real proof, not a sticker.</p>
+      <ul class="ticks">
+        <li>Turns red if real issues are found</li>
+        <li>Expires if monitoring stops</li>
+        <li>Independently verifiable by any visitor</li>
+      </ul>
+    </div>
+    <div class="split-visual reveal">
+      <div class="verify-card">
+        <div class="vc-brand">◣ CENTINELA · TRUST SEAL</div>
+        <div class="vc-host">acmestore.com</div>
+        <div class="vc-state"><span class="dot"></span>Secured &amp; actively monitored</div>
+        <svg width="232" height="38" role="img" aria-label="Verified seal" xmlns="http://www.w3.org/2000/svg" style="margin:14px 0">
+          <rect rx="6" width="232" height="38" fill="#1b2330"/>
+          <rect rx="6" x="150" width="82" height="38" fill="#3fb950"/><rect x="150" width="10" height="38" fill="#3fb950"/>
+          <g transform="translate(13,11)"><path d="M8 0L1 3v5c0 4 3 7 7 8 4-1 7-4 7-8V3z" fill="#3fb950"/><path d="M5 8l2 2 4-4" stroke="#0b0f16" stroke-width="1.6" fill="none"/></g>
+          <g font-family="Inter,sans-serif" font-weight="700"><text x="38" y="17" fill="#aeb9c7" font-size="11">CENTINELA</text><text x="38" y="29" fill="#e6edf3" font-size="9" font-weight="400">SECURED &amp; MONITORED</text><text x="191" y="23" fill="#06140b" font-size="11" text-anchor="middle">VERIFIED</text></g>
+        </svg>
+        <table class="vc-table">
+          <tr><td>Last security audit</td><td>Jun 21, 2026</td></tr>
+          <tr><td>Security grade</td><td>A (94/100)</td></tr>
+          <tr><td>Critical / High issues</td><td>0 / 0</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPLIANCE -->
+  <section class="band alt split reverse" id="compliance">
+    <div class="split-text reveal">
+      <span class="eyebrow">PCI compliance</span>
+      <h2>Hand them a report, not an opinion</h2>
+      <p>Centinela maps every finding to the PCI DSS requirements your store is
+        obligated to meet. The result is a clean, printable report that says exactly
+        where you stand — the document that turns "maybe later" into "fix this now".</p>
+      <p class="quiet">Requirement 11.3.2 asks for external scans every quarter.
+        Centinela's continuous monitoring covers it — automatically.</p>
+    </div>
+    <div class="split-visual reveal">
+      <div class="report-card">
+        <div class="rc-head">
+          <div class="rc-brand">◣ CENTINELA</div>
+          <div class="rc-title">PCI DSS v4.0 compliance report</div>
+          <div class="rc-sub">acmestore.com</div>
+        </div>
+        <div class="rc-verdict">
+          <div><strong>Non-compliant</strong><span>3 of 6 requirements met</span></div>
+          <div class="rc-score">3/6</div>
+        </div>
+        <div class="rc-row"><span class="rc-code">4.2.1</span> Encrypt data in transit <span class="pill ok">Pass</span></div>
+        <div class="rc-row"><span class="rc-code">6.2.4</span> Common web attacks <span class="pill bad">Action</span></div>
+        <div class="rc-row"><span class="rc-code">6.4.2</span> Browser controls <span class="pill bad">Action</span></div>
+        <div class="rc-row"><span class="rc-code">11.3.2</span> Quarterly scanning <span class="pill ok">Pass</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="band" id="pricing">
+    <div class="section-head reveal">
+      <span class="eyebrow">Pricing</span>
+      <h2>One store, fully covered</h2>
+      <p class="sub">Monitoring, the verified seal, and your PCI report — in one plan.</p>
+    </div>
+    <div class="grid-3 pricing">
+      <article class="card price reveal">
+        <h3>Starter</h3>
+        <div class="amount">$49<span>/mo</span></div>
+        <ul class="ticks">
+          <li>1 store monitored</li>
+          <li>Weekly security scans</li>
+          <li>Verified trust seal</li>
+          <li>PCI compliance report</li>
+        </ul>
+        <a href="#report" class="btn btn-block">Start free report</a>
+      </article>
+      <article class="card price featured reveal">
+        <span class="tag">Most popular</span>
+        <h3>Pro</h3>
+        <div class="amount">$99<span>/mo</span></div>
+        <ul class="ticks">
+          <li>1 store monitored</li>
+          <li>Daily scans + instant alerts</li>
+          <li>Verified trust seal</li>
+          <li>PCI report, refreshed monthly</li>
+          <li>Priority fixes guidance</li>
+        </ul>
+        <a href="#report" class="btn btn-block">Start free report</a>
+      </article>
+      <article class="card price reveal">
+        <h3>Agency</h3>
+        <div class="amount">Custom</div>
+        <ul class="ticks">
+          <li>Multiple stores / clients</li>
+          <li>White-label seal &amp; reports</li>
+          <li>Bulk monitoring dashboard</li>
+          <li>Volume pricing</li>
+        </ul>
+        <a href="#report" class="btn btn-block">Talk to us</a>
+      </article>
+    </div>
+    <p class="microcopy center">Prices in USD. Billed monthly. Cancel anytime.</p>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="cta reveal">
+    <h2>See what's exposed on your store — free</h2>
+    <p>We'll run a security scan and send you the report. No commitment.</p>
+    <a href="#report" class="btn btn-lg">Get your free security report</a>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="brand"><span class="brand-mark" aria-hidden="true">◣</span> CENTINELA</div>
+  <p>Continuous security monitoring &amp; PCI trust seals for online stores.</p>
+  <p class="copy">© <span id="year">2026</span> Centinela. Built for store owners who'd rather not get breached.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

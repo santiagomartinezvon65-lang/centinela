@@ -1,7 +1,10 @@
-"""Backends de LLM para el agente — Claude (API) u Ollama (local, gratis, offline).
+"""Backends de LLM para el agente — Claude (API), Groq (nube, gratis) u Ollama (local).
 
 El agente es provider-agnóstico: usa la misma interfaz `Backend` sin importar
-quién razona detrás. Ollama no necesita API key ni pip (habla por urllib).
+quién razona detrás. Ni Groq ni Ollama necesitan pip: hablan por urllib.
+  • anthropic: el más capaz, pago.
+  • groq: modelo grande (Llama 70B) en la nube, tier gratis sin tarjeta, rapidísimo.
+  • ollama: local, gratis, offline, pero limitado por el hardware.
 """
 from __future__ import annotations
 
@@ -11,7 +14,9 @@ import urllib.error
 import urllib.request
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-DEFAULTS = {"anthropic": "claude-opus-4-8", "ollama": "qwen2.5:7b"}
+GROQ_HOST = os.environ.get("GROQ_HOST", "https://api.groq.com/openai/v1")
+DEFAULTS = {"anthropic": "claude-opus-4-8", "ollama": "qwen2.5:7b",
+            "groq": "llama-3.3-70b-versatile"}
 
 
 class Turn:
@@ -139,6 +144,73 @@ class OllamaBackend(Backend):
         return (self.in_t, self.out_t)
 
 
+# ── Groq (API compatible con OpenAI, tier gratis) ───────────────────
+class GroqBackend(Backend):
+    name = "groq"
+
+    def __init__(self, model: str, system: str, tools: list[dict]):
+        self.model = model
+        self.api_key = os.environ.get("GROQ_API_KEY", "")
+        if not self.api_key:
+            raise RuntimeError(
+                "Falta GROQ_API_KEY. Sacá una gratis (sin tarjeta) en "
+                "console.groq.com y seteala como variable de entorno.")
+        # Anthropic schema → OpenAI/Groq function schema (mismo formato que Ollama)
+        self.tools = [{"type": "function", "function": {
+            "name": t["name"], "description": t["description"],
+            "parameters": t["input_schema"]}} for t in tools]
+        self.messages = [{"role": "system", "content": system}]
+        self.in_t = 0
+        self.out_t = 0
+
+    def add_user(self, text: str) -> None:
+        self.messages.append({"role": "user", "content": text})
+
+    def _post(self, payload: dict) -> dict:
+        req = urllib.request.Request(
+            GROQ_HOST + "/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json",
+                     "Authorization": f"Bearer {self.api_key}"}, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"Groq HTTP {e.code}: {e.read().decode('utf-8', 'ignore')[:300]}")
+
+    def step(self) -> Turn:
+        data = self._post({"model": self.model, "messages": self.messages,
+                           "tools": self.tools, "stream": False})
+        u = data.get("usage", {})
+        self.in_t += u.get("prompt_tokens", 0)
+        self.out_t += u.get("completion_tokens", 0)
+        msg = data["choices"][0]["message"]
+        # guardamos el mensaje del asistente tal cual (con sus tool_calls) para
+        # que las respuestas de herramienta referencien el tool_call_id correcto.
+        self.messages.append(msg)
+
+        calls = []
+        for tc in msg.get("tool_calls") or []:
+            fn = tc.get("function", {})
+            args = fn.get("arguments", {})
+            if isinstance(args, str):
+                try:
+                    args = json.loads(args)
+                except ValueError:
+                    args = {}
+            calls.append({"id": tc.get("id", ""), "name": fn.get("name", ""),
+                          "input": args})
+        return Turn((msg.get("content") or "").strip(), calls)
+
+    def add_tool_results(self, results: list[dict]) -> None:
+        for r in results:
+            self.messages.append({"role": "tool", "tool_call_id": r["id"],
+                                  "content": r["content"]})
+
+    def usage(self):
+        return (self.in_t, self.out_t)
+
+
 # ── factory ─────────────────────────────────────────────────────────
 def _ollama_up() -> bool:
     try:
@@ -153,17 +225,23 @@ def make_backend(provider: str, model: str | None, system: str,
     if provider == "auto":
         if os.environ.get("ANTHROPIC_API_KEY"):
             provider = "anthropic"
+        elif os.environ.get("GROQ_API_KEY"):
+            provider = "groq"
         elif _ollama_up():
             provider = "ollama"
         else:
             raise RuntimeError(
-                "Sin backend disponible: no hay ANTHROPIC_API_KEY ni Ollama corriendo.\n"
-                "  • Local/gratis: instalá Ollama (ollama.com), corré `ollama pull qwen2.5:7b`, "
-                "y reintenta con --provider ollama.\n"
-                "  • Cloud: seteá ANTHROPIC_API_KEY.")
+                "Sin backend disponible: no hay ANTHROPIC_API_KEY, GROQ_API_KEY ni Ollama.\n"
+                "  • Nube/gratis: sacá una GROQ_API_KEY en console.groq.com (sin tarjeta) "
+                "y reintenta con --provider groq.\n"
+                "  • Local/gratis: instalá Ollama (ollama.com), `ollama pull qwen2.5:7b`, "
+                "y usá --provider ollama.\n"
+                "  • Pago: seteá ANTHROPIC_API_KEY.")
     model = model or DEFAULTS.get(provider)
     if provider == "anthropic":
         return AnthropicBackend(model, system, tools)
+    if provider == "groq":
+        return GroqBackend(model, system, tools)
     if provider == "ollama":
         if not _ollama_up():
             raise RuntimeError(
