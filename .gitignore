@@ -18,6 +18,7 @@ web/data.js
 /centinela-*.csv
 /centinela-*.html
 /compliance-*.html
+/outreach/
 
 # Editores / SO / tooling local
 .DS_Store

@@ -593,6 +593,49 @@ def cmd_seal(args: argparse.Namespace) -> int:
     return 1
 
 
+def cmd_prospect(args: argparse.Namespace) -> int:
+    from core import prospect
+    urls = list(args.urls or [])
+    if args.file:
+        try:
+            with open(args.file, encoding="utf-8") as fh:
+                urls += [ln.strip() for ln in fh
+                         if ln.strip() and not ln.lstrip().startswith("#")]
+        except FileNotFoundError:
+            print(f"{C['crit']}No encontré el archivo: {args.file}{C['x']}")
+            return 1
+    if not urls:
+        print(f"{C['crit']}Pasá una o más URLs, o --file lista.txt{C['x']}")
+        return 1
+
+    print(f"{C['b']}🎯 Prospección — {len(urls)} tienda(s){C['x']}  "
+          f"{C['dim']}scan pasivo + compliance PCI + email de outreach{C['x']}\n")
+    results = prospect.run_batch(urls, outdir=args.out,
+                                 sender=args.sender or "{YOUR NAME}")
+
+    print(f"{C['b']}{'TIENDA':<26}{'NOTA':<6}{'PCI':<7}{'CALOR':<7}HALLAZGO TOP{C['x']}")
+    for r in results:
+        if not r.get("ok"):
+            print(f"  {C['dim']}{r['host']:<24} (no alcanzable: {r.get('error','')[:30]}){C['x']}")
+            continue
+        gc = C["ok"] if r["grade"] in ("A", "B") else C["high"] if r["grade"] in ("C", "D") else C["crit"]
+        heat = "🔥" * min(1 + r["sales_score"] // 20, 5)
+        print(f"  {r['host']:<24} {gc}{r['grade']:<5}{C['x']} "
+              f"{C['crit']}{r['pci_pass']}/{r['pci_total']}{C['x']}   "
+              f"{heat:<6} {C['dim']}{r['top'][:38]}{C['x']}")
+
+    ok = [r for r in results if r.get("ok")]
+    print(f"\n{C['ok']}Material listo en ./{args.out}/{C['x']}  "
+          f"{C['dim']}(por tienda: report.html + email.txt){C['x']}")
+    if ok:
+        hot = ok[0]
+        print(f"{C['b']}Prospecto más caliente: {hot['host']}{C['x']} "
+              f"{C['dim']}— {hot['gaps']} gaps PCI, abrí {hot['dir']}/{C['x']}")
+    print(f"{C['dim']}Nota: scan pasivo (no intrusivo). Pentest profundo (--deep) = "
+          f"sólo con autorización del dueño, usá el comando 'pentest'.{C['x']}")
+    return 0
+
+
 def cmd_recon(args: argparse.Namespace) -> int:
     if not _authorize(args.url, args.authorized):
         print(f"{C['crit']}Recon cancelado.{C['x']}")
@@ -1126,6 +1169,14 @@ def main() -> int:
     dn.add_argument("domain")
     dn.add_argument("--fail-on", choices=["critical", "high", "medium", "low"])
     dn.set_defaults(func=cmd_dns)
+
+    pr = sub.add_parser("prospect",
+                        help="batch: scan pasivo + compliance PCI + email de outreach por tienda")
+    pr.add_argument("urls", nargs="*", help="URLs de tiendas a prospectar")
+    pr.add_argument("--file", help="archivo con una URL por línea (# = comentario)")
+    pr.add_argument("--out", default="outreach", help="carpeta de salida (default: outreach)")
+    pr.add_argument("--sender", help="tu nombre/firma para el email de outreach")
+    pr.set_defaults(func=cmd_prospect)
 
     sl = sub.add_parser("seal", help="sello de confianza verificable (badge para la web del cliente)")
     sl.add_argument("op", choices=["issue", "status", "list"])
